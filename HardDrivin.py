@@ -15,9 +15,11 @@ twitter_username = 'hardtestin'
 twitter_password = 'lkmkjn'
 twitter_api = twitter.Api(twitter_username, twitter_password)
 twitter_last_reply_id = 0
+twitter_last_tweet_id = 0
 twitter_search_uri = 'http://search.twitter.com/search.json?q='
 twitter_friendship_exists_uri = 'http://api.twitter.com/1/friendships/exists.json?user_a='+twitter_username+'&user_b='
 twitter_friendship_create_uri = 'http://api.twitter.com/1/friendships/create.json?screen_name='
+twitter_tweets = []
 twitter_following = []
 
 cars = {
@@ -27,13 +29,13 @@ cars = {
 }
 
 directions = {
-    'C':  {'x-servo-val':45, 'y-servo-val':45},
-    'F':  {'x-servo-val':45, 'y-servo-val':83},
-    'B':  {'x-servo-val':45, 'y-servo-val':17},
-    'FL': {'x-servo-val':83, 'y-servo-val':83},
-    'FR': {'x-servo-val':17, 'y-servo-val':83},
-    'BL': {'x-servo-val':83, 'y-servo-val':17},
-    'BR': {'x-servo-val':17, 'y-servo-val':17}
+    'S':  {'x-servo-val':90, 'y-servo-val':90},
+    'F':  {'x-servo-val':115, 'y-servo-val':90},
+    'B':  {'x-servo-val':65, 'y-servo-val':90},
+    'FL': {'x-servo-val':115, 'y-servo-val':70},
+    'FR': {'x-servo-val':115, 'y-servo-val':100},
+    'BL': {'x-servo-val':65, 'y-servo-val':100},
+    'BR': {'x-servo-val':65, 'y-servo-val':70}
 }
 
 usbport = 'COM12'
@@ -86,9 +88,31 @@ def follow(user):
         return success
 
 def get_new_tweets():
+    return twitter_api.GetFriendsTimeline(twitter_username,since_id=twitter_last_tweet_id)
+    
+def update_tweets():
     # save id's of tweets already seen, and don't show them again
-    return twitter_api.GetFriendsTimeline(twitter_username)
+    temp_tweet_id = 0
+    tweets = get_new_tweets()
+    newtweets = []
+    for t in tweets:
+        temp_tweet_id = max(temp_tweet_id, t.id)
+        newtweets.append([t.id,t.user.name,t.text])
+        
+    global twitter_last_tweet_id, twitter_tweets
+    twitter_last_tweet_id = max(twitter_last_tweet_id,temp_tweet_id)
+    twitter_tweets = newtweets #.extend(twitter_tweets)
+    
+def get_tweets():
+    return twitter_tweets
 
+def show_tweets():
+    map(print_tweet,twitter_tweets)
+        
+def print_tweet(tweet):
+    print "%d %s %s" % (tweet[0], tweet[1], tweet[2])
+    
+    
 def get_following():
     return twitter_following;
     
@@ -99,7 +123,7 @@ def update_following():
     new_users = []
     temp_reply_id = 0
     for r in replies:
-        temp_reply_id = r.id
+        temp_reply_id = max(temp_reply_id,r.id)
         m = p.match(r.text)
         if (m):
             u = m.group(1)
@@ -114,10 +138,10 @@ def update_following():
         except urllib2.HTTPError as e:
             print "Error updating follow list"
             print e
-        else:
-            # success
-            global twitter_last_reply_id
-            twitter_last_reply_id = max(twitter_last_reply_id, temp_reply_id) 
+            return
+            
+    global twitter_last_reply_id
+    twitter_last_reply_id = max(twitter_last_reply_id, temp_reply_id) 
         
 def moveServo(servo, angle):
     '''Moves the specified servo to the supplied angle.
@@ -130,14 +154,15 @@ def moveServo(servo, angle):
 
     (e.g.) >>> servo.move(2, 90)
            ... # "move servo #2 to 90 degrees"'''
-
+    
     if (0 <= angle <= 180):
         ser.write(chr(255))
         ser.write(chr(servo))
         ser.write(chr(angle))
     else:
         print "Servo angle must be an integer between 0 and 180.\n"
-
+    
+    
 def moveCar(car, direction, duration=500):
     xservo = cars[car]['x-servo']
     yservo = cars[car]['y-servo']
@@ -145,23 +170,24 @@ def moveCar(car, direction, duration=500):
     yval = directions[direction]['y-servo-val']
     
     # steer first...
-    print "xservo %d %d" % (xservo, xval)
+    #print "xservo %d %d" % (xservo, xval)
     moveServo(xservo, xval)
     
     # then hit the gas!
-    print "yservo %d %d" % (yservo, yval)
+    #print "yservo %d %d" % (yservo, yval)
     moveServo(yservo, yval)
     
     # stop the car after given duration
     #print "stopping after %d" % (duration)
-    #t = Timer(duration/1000, stopCar, [car])
-    #t.start()
+    t = Timer(float(duration)/1000, stopCar, [car])
+    t.start()
     
 def stopCar(car):
+    #print "stopping car %d" % car
     xservo = cars[car]['x-servo']
     yservo = cars[car]['y-servo']
-    xcentre = directions['C']['x-servo-val']
-    ycentre = directions['C']['y-servo-val']
+    xcentre = directions['S']['x-servo-val']
+    ycentre = directions['S']['y-servo-val']
     moveServo(yservo, ycentre)
     moveServo(xservo, xcentre)
 
