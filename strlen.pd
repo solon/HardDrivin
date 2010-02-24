@@ -1,0 +1,42 @@
+#N canvas 331 22 662 473 10;
+#X floatatom 105 241 5 0 0 0 - - -;
+#X obj 105 212 v;
+#X obj 105 272 outlet;
+#X obj 85 -41 inlet;
+#X msg 225 -36 this message is 34 characters long;
+#X msg 255 5 this is a very long message I dont know if it is under
+140 characters but I think it should be ok for testing purposes;
+#X obj 283 305 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X msg 265 53 this is a very long message. I \, don't know if it is
+under 140 characters but I think it should be ok for testing purposes
+;
+#X obj 19 81 delay 100;
+#X obj 19 50 speedlim 200;
+#X obj 104 83 spell;
+#X obj 104 111 t b;
+#X obj 104 165 counter;
+#X obj 85 5 t b a b;
+#X obj 148 50 speedlim 200;
+#X obj 192 95 print;
+#X obj 221 141 spigot;
+#X msg 304 170 1;
+#X msg 276 170 0;
+#X connect 0 0 2 0;
+#X connect 1 0 0 0;
+#X connect 3 0 13 0;
+#X connect 4 0 13 0;
+#X connect 5 0 13 0;
+#X connect 6 0 1 0;
+#X connect 7 0 13 0;
+#X connect 9 0 8 0;
+#X connect 10 0 11 0;
+#X connect 11 0 12 0;
+#X connect 12 0 1 0;
+#X connect 13 0 9 0;
+#X connect 13 1 10 0;
+#X connect 13 2 14 0;
+#X connect 14 0 12 3;
+#X connect 14 0 15 0;
+#X connect 17 0 16 1;
+#X connect 18 0 16 1;

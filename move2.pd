@@ -1,0 +1,28 @@
+#N canvas 0 0 239 300 10;
+#X obj -51 -64 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj -51 -41 random 2;
+#X obj -51 -18 + 1;
+#X text -55 -85 random car;
+#X obj 25 -64 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
+-1;
+#X text 21 -85 random direction;
+#X obj 25 -41 random 6;
+#X obj -51 -162 inlet;
+#X obj -51 -131 t b b b;
+#X obj -51 72 s send_osc;
+#X obj 25 -18 int2dir;
+#X obj 102 -40 f \$1;
+#X obj -51 41 sprintf send /movecar %d %s %d;
+#X connect 0 0 1 0;
+#X connect 1 0 2 0;
+#X connect 2 0 12 0;
+#X connect 4 0 6 0;
+#X connect 6 0 10 0;
+#X connect 7 0 8 0;
+#X connect 8 0 0 0;
+#X connect 8 1 4 0;
+#X connect 8 2 11 0;
+#X connect 10 0 12 1;
+#X connect 11 0 12 2;
+#X connect 12 0 9 0;
