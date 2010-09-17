@@ -15,12 +15,12 @@ class CarControl:
         }
         self.directions = {
             'S':  {'x-servo-val':90, 'y-servo-val':90},
-            'F':  {'x-servo-val':115, 'y-servo-val':90},
-            'B':  {'x-servo-val':65, 'y-servo-val':90},
-            'FL': {'x-servo-val':115, 'y-servo-val':70},
-            'FR': {'x-servo-val':115, 'y-servo-val':100},
-            'BL': {'x-servo-val':65, 'y-servo-val':100},
-            'BR': {'x-servo-val':65, 'y-servo-val':70}
+            'F':  {'x-servo-val':120, 'y-servo-val':90},
+            'B':  {'x-servo-val':60, 'y-servo-val':90},
+            'FL': {'x-servo-val':120, 'y-servo-val':70},
+            'FR': {'x-servo-val':120, 'y-servo-val':100},
+            'BL': {'x-servo-val':60, 'y-servo-val':100},
+            'BR': {'x-servo-val':60, 'y-servo-val':70}
         }
         
         self.arduino = Serial(self.comport, 115200, timeout=1)
@@ -40,12 +40,12 @@ class CarControl:
         self.moveServo(yservo, yval)
         
         # stop the car after given duration
-        #print "stopping after %d" % (duration)
-        t = Timer(float(duration)/1000, self.stop, [car])
+        print "stopping after %d" % (duration)
+        t = Timer(10 + float(duration)/1000, self.stop, [car])
         t.start()
         
     def stop(self, car):
-        #print "stopping car %d" % car
+        print "stopping car %d" % car
         xservo = self.cars[car]['x-servo']
         yservo = self.cars[car]['y-servo']
         xcentre = self.directions['S']['x-servo-val']
@@ -70,6 +70,7 @@ class CarControl:
             self.arduino.write(chr(255))
             self.arduino.write(chr(servo))
             self.arduino.write(chr(angle))
+            print "servo %d: %d" % (servo,angle)
         else:
             print "Servo angle must be an integer between 0 and 180.\n"
         

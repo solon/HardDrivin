@@ -1,25 +1,28 @@
 # HardDrivin.py
 #
 
-import time, threading
+import time, threading, yaml
 from threading import Timer
 
-from TwitterService import TwitterService
 from CarControl import CarControl
-from OSC import *
+from OSC import OSCServer
 
 class HardDrivin:
-    
+        
     def __init__(self):
         
-        self.oscSendAddress = '127.0.0.1', 9000
-        self.oscRecvAddress = '127.0.0.1', 9001
+        try:
+            f = open('settings.yaml')
+            self.settings = yaml.load(f)
+        except Exception, e:
+            print 'e: %s' % e
+            print repr(e)
+            exit(1)
+    
+        # Receive commands from Pure Data via OSC
+        self.oscRecvAddress = self.settings['car_control']['osc_recv_addr'], self.settings['car_control']['osc_recv_port']
         
-        self.cars = CarControl('COM26')
-        self.twitter = TwitterService()
-
-        self.oscClient = OSCClient()
-        self.oscClient.connect(self.oscSendAddress)
+        self.cars = CarControl(self.settings['serial_port'])
         
         self.oscServer = OSCServer(self.oscRecvAddress)
     
@@ -53,12 +56,6 @@ class HardDrivin:
         print "data %s" % stuff
         print "---"
         
-    def sendOSC(self, address, data):
-        m = OSC.OSCMessage()
-        m.setAddress(address)
-        m.append(data)
-        self.oscClient.send(m)
-        
     def startOSCServer(self):
         # Start OSCServer
         print "\nStarting OSCServer. Use ctrl-C to quit."
@@ -78,39 +75,17 @@ class HardDrivin:
                 
 if __name__ == "__main__":
     
-    print "  ___ ___                   .___ ________        .__        .__      /\\"
-    print " /   |   \_____  _______  __| _/ \______ \_______|__|___  __|__| ____)/"
-    print "/    ~    \__  \ \_  __ \/ __ |   |    |  \_  __ \  |\  \/ /|  |/    \ "
-    print "\    Y    // __ \_|  | \/ /_/ |   |    `   \  | \/  | \   / |  |   |  \\"
-    print " \___|_  /(____  /|__|  \____ |  /_______  /__|  |__|  \_/  |__|___|  /"
-    print "       \/      \/            \/          \/                         \/ "
+    print ""
+    print "    __ __             __  ___      _       _      _ "
+    print "   / // /___ ________/ / / _ \____(_)_  __(_)___ ( )"
+    print "  / _  // _ `/ __/ _  / / // / __/ /| |/ / // _ \|/ "
+    print " /_//_/ \_,_/_/  \_,_/ /____/_/ /_/ |___/_//_//_/   "
+    print ""
+    print "  __        __   __   __       ___  __   __       "
+    print " /  `  /\  |__) /  ` /  \ |\ |  |  |__) /  \ |    "
+    print " \__, /~~\ |  \ \__, \__/ | \|  |  |  \ \__/ |___ "
+    print ""                                    
 
-    '''
-    configfd = ConfigParser.RawConfigParser()
-    configfd.read(configfile)
-    print "Reading config: %s" % configfile
-
-    username  = configfd.get('Connection', 'username')
-    password  = configfd.get('Connection', 'password')
-    recieveID = configfd.getint('Connection', 'recieveID')
-    if configfd.has_option('Connection', 'timeout'):
-    timeout = configfd.getint('Connection', 'timeout')
-    else:
-    timeout = 5    
-
-    actions = {}
-    for section in configfd.sections():
-    if section == 'Connection':
-      continue
-    action = {}
-    action['match']   = re.compile(configfd.get(section,'match'))
-    action['command'] = configfd.get(section,'command')
-    action['output']  = configfd.get(section,'output')
-    actions.update({section:action})
-    print "Loaded modules: %s"%", ".join(actions.keys())
-    '''
-
-    
     hd = HardDrivin()
     hd.startOSCServer()
     
