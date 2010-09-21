@@ -1,11 +1,11 @@
-#N canvas 207 41 766 395 10;
-#X obj 10 -95 dumpOSC 9000;
+#N canvas 53 293 824 485 10;
+#X obj -2 -117 dumpOSC 9000;
 #X obj 173 -78 OSCroute /#harddrivin;
 #X obj 417 77 sendOSC;
 #X obj 409 -42 loadbang;
 #X msg 414 -11 connect localhost 9001;
 #X obj 341 25 r send_osc;
-#N canvas 261 31 643 349 manual-control 1;
+#N canvas 261 31 643 349 manual-control 0;
 #X obj 19 155 s send_osc;
 #X floatatom 163 82 5 300 1000 0 - - -;
 #X msg 5 -13 F;
@@ -24,62 +24,62 @@
 #X obj 255 171 s send_osc;
 #X text 62 77 duration (ms);
 #X obj 154 30 loadbang;
-#X msg 160 54 300;
 #X obj 395 52 loadbang;
-#X msg 396 86 300;
 #X text 313 127 duration (ms);
 #X text 36 -7 CAR 1;
 #X text 275 -5 CAR 2;
 #X obj 20 102 sprintf send /movecar 1 %s %d;
 #X obj 260 148 sprintf send /movecar 2 %s %d;
-#X connect 1 0 24 1;
-#X connect 2 0 24 0;
-#X connect 3 0 24 0;
-#X connect 4 0 24 0;
-#X connect 5 0 24 0;
-#X connect 6 0 24 0;
-#X connect 7 0 24 0;
-#X connect 8 0 25 1;
-#X connect 9 0 25 0;
-#X connect 10 0 25 0;
-#X connect 11 0 25 0;
-#X connect 12 0 25 0;
-#X connect 13 0 25 0;
-#X connect 14 0 25 0;
-#X connect 17 0 18 0;
-#X connect 18 0 1 0;
-#X connect 19 0 20 0;
-#X connect 20 0 8 0;
-#X connect 24 0 0 0;
-#X connect 25 0 15 0;
+#X msg 395 86 100;
+#X msg 161 54 200;
+#X connect 1 0 22 1;
+#X connect 2 0 22 0;
+#X connect 3 0 22 0;
+#X connect 4 0 22 0;
+#X connect 5 0 22 0;
+#X connect 6 0 22 0;
+#X connect 7 0 22 0;
+#X connect 8 0 23 1;
+#X connect 9 0 23 0;
+#X connect 10 0 23 0;
+#X connect 11 0 23 0;
+#X connect 12 0 23 0;
+#X connect 13 0 23 0;
+#X connect 14 0 23 0;
+#X connect 17 0 25 0;
+#X connect 18 0 24 0;
+#X connect 22 0 0 0;
+#X connect 23 0 15 0;
+#X connect 24 0 8 0;
+#X connect 25 0 1 0;
 #X restore 502 -142 pd manual-control;
 #X obj 416 -138 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
 -1 -1;
 #X text 432 -139 PANIC;
-#N canvas 0 0 232 227 panic 0;
+#N canvas 0 22 232 227 panic 0;
 #X obj 10 7 inlet;
-#X obj 10 60 s send_osc;
-#X obj 10 19 t b b;
-#X msg 19 30 send /stopcar 1;
-#X msg 10 38 send /stopcar 2;
+#X obj 18 122 s send_osc;
+#X obj 14 35 t b b;
+#X msg 68 57 send /stopcar 1;
+#X msg 21 92 send /stopcar 2;
 #X connect 0 0 2 0;
 #X connect 2 0 4 0;
 #X connect 2 1 3 0;
 #X connect 3 0 1 0;
 #X connect 4 0 1 0;
 #X restore 390 -98 pd panic;
-#X obj 12 -40 OSCroute /tweet;
-#X obj 3 31 print tweet;
+#X obj 25 -34 OSCroute /tweet;
+#X obj 42 64 print tweet;
 #X obj 116 -3 print hashtag;
 #X obj 233 1 unpack s 0 s;
-#N canvas 0 0 535 202 todo 0;
+#N canvas 0 22 535 202 todo 0;
 #X obj 9 12 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
 -1;
 #X text 43 11 both cars \, same random direction \, same random duration
 ;
 #X obj 9 19 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
 -1;
-#N canvas 0 0 499 356 move4 0;
+#N canvas 0 22 499 356 move4 0;
 #X obj 33 39 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
 -1;
 #X text 32 31 random direction;
@@ -114,7 +114,7 @@
 #X connect 14 0 9 0;
 #X connect 15 0 9 0;
 #X restore 14 12 pd move4;
-#N canvas 0 0 499 356 move5 0;
+#N canvas 0 22 499 356 move5 0;
 #X obj 33 39 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
 -1;
 #X text 32 31 random direction;
@@ -153,7 +153,7 @@
 ;
 #X obj 9 28 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
 -1;
-#N canvas 0 0 499 356 move6 0;
+#N canvas 0 22 499 356 move6 0;
 #X obj 33 39 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
 -1;
 #X text 32 31 random direction;
@@ -195,7 +195,7 @@
 #X text 44 -7 random car \, random direction \, random duration;
 #X text 45 0 random car \, random direction \, set duration;
 #X obj 16 1 move2 350;
-#N canvas 0 0 360 295 move1 0;
+#N canvas 0 22 360 295 move1 0;
 #X obj 10 39 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
 -1;
 #X obj 10 47 random 2;
@@ -236,24 +236,24 @@
 #X connect 6 0 7 0;
 #X connect 9 0 12 0;
 #X restore 616 65 pd todo;
-#X floatatom 248 21 5 0 0 0 - - -;
-#X obj 62 225 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
--1;
+#X floatatom 225 22 5 0 0 0 - - -;
+#X obj 532 173 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
 #X obj 243 47 movelength;
-#X obj -10 50 unpack s 0 s;
-#X obj 12 -69 spigot;
-#X obj 19 -140 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 1
+#X obj 26 96 unpack s 0 s;
+#X obj 25 -68 spigot;
+#X obj 95 -136 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 1
 1;
-#X text 39 -136 enable incoming tweets;
+#X text 115 -132 enable incoming tweets;
 #X obj 181 -32 speedlim 300;
-#X obj -8 12 speedlim 300;
-#X obj -4 107 movelength_two;
+#X obj 25 30 speedlim 300;
+#X obj 65 159 movelength_two;
 #X floatatom 171 89 5 0 0 0 - - -;
-#X obj 34 163 move2 500;
-#X obj 20 -182 loadbang;
-#X msg 19 -161 1;
-#X obj 155 149 metro 2000;
-#X obj 226 99 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
+#X obj 563 199 move2 500;
+#X obj 96 -178 loadbang;
+#X msg 95 -157 1;
+#X obj 564 158 metro 2000;
+#X obj 563 130 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 0
 1;
 #X connect 0 0 19 0;
 #X connect 1 0 22 0;

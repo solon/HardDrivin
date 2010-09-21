@@ -2,23 +2,34 @@
 #
 
 import OSC
+import warnings
+from OSC import OSCClientError
 
 class Client:
   def __init__(self, port=9000):
-    self._client = OSC.OSCClient()
-    self._address = '127.0.0.1', port
-    self._client.connect(self._address)
+    with warnings.catch_warnings():
+      warnings.simplefilter("ignore")      
+      self._client = OSC.OSCClient()
+      self._address = '127.0.0.1', port
+      self._client.connect(self._address)
 
   def send(self, address, data):
-    m = OSC.OSCMessage()
-    m.setAddress(address)
-    if isinstance(data, list) :
-      for d in data:
-        m.append(d)
-    else:
-      m.append(data)
-    self._client.send(m)
-
+    with warnings.catch_warnings():
+      warnings.simplefilter("ignore")
+      m = OSC.OSCMessage()
+      m.setAddress(address)
+      if isinstance(data, list) :
+        for d in data:
+          m.append(d)
+      else:
+        m.append(data)
+      try:
+        self._client.send(m)
+      except OSCClientError, e:
+        pass
+        #print "!!! Pure Data client not connected\n\n"
+        #print 'e: %s' % e
+        #print repr(e)
 '''
 class OSCServer:
   def __init(self)__:

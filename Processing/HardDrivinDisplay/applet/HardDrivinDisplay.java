@@ -1,38 +1,51 @@
-import oscP5.*;
-import netP5.*;
+import processing.core.*; 
+import processing.xml.*; 
+
+import oscP5.*; 
+import netP5.*; 
+
+import java.applet.*; 
+import java.awt.*; 
+import java.awt.image.*; 
+import java.awt.event.*; 
+import java.io.*; 
+import java.net.*; 
+import java.text.*; 
+import java.util.*; 
+import java.util.zip.*; 
+import java.util.regex.*; 
+
+public class HardDrivinDisplay extends PApplet {
+
+
+
 
 OscP5 oscP5;
 NetAddress myRemoteLocation; 
-long lastTweetTime = 0;
-long displayResetTime = 30000;
 
-void setup() {
-  size(900, 930, P3D);
+public void setup() {
+  size(1024, 600, P3D);
   // receive OSC messages from HardDrivin.py
   oscP5 = new OscP5(this,9002);
   // Load the font from the sketch's data directory
   textFont(loadFont("Ceriph0756-32.vlw"));
 
-  displayInfo();
+  background(0);
+  drawTweet("harddrivin","Control the cars with Twitter! Use the hashtag #harddrivin - or get the cars to follow a user: @harddrivin follow @tweakfestival");
 }
 
-void draw() {
-  if ((millis() - lastTweetTime) > displayResetTime) {
-    println(millis() - lastTweetTime);
-    displayInfo();
-  } 
+public void draw() {
 }
 
-void drawTweet(String user, String tweet) {
+public void drawTweet(String user, String tweet) {
   background(0);
   fill(255);
   text("@"+user, 24, 100);
   fill(0,255,0);
-  text(tweet, 24, 160, 630, 676);
-  lastTweetTime = millis()+1000;
+  text(tweet, 24, 160, 960, 400);
 }
 
-void oscEvent(OscMessage theOscMessage) {
+public void oscEvent(OscMessage theOscMessage) {
   /* check if theOscMessage has the address pattern we are looking for. */
   
   if (theOscMessage.checkAddrPattern("/tweet")==true || theOscMessage.checkAddrPattern("/hashtag")==true) {
@@ -45,9 +58,7 @@ void oscEvent(OscMessage theOscMessage) {
       //print("### received an osc message /tweet with typetag sis.");
       //println(" values: "+firstValue+", "+secondValue+", "+thirdValue);
       
-      lastTweetTime = millis()+1000;
       drawTweet(user, tweet);
-
       
       return;
     }      
@@ -55,7 +66,8 @@ void oscEvent(OscMessage theOscMessage) {
   println("### received an osc message. with address pattern "+theOscMessage.addrPattern());
 }
 
-void displayInfo() {
-  drawTweet("harddrivin","Control the cars with Twitter! Use the hashtags #harddrivin, or #tweak -– or get the cars to follow a user: @harddrivin follow @tweakfestival");
-}
 
+  static public void main(String args[]) {
+    PApplet.main(new String[] { "--bgcolor=#FFFFFF", "HardDrivinDisplay" });
+  }
+}

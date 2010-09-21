@@ -16,6 +16,7 @@ int startbyte;       // start byte, begin reading input
 int servo;           // which servo to pulse?
 int pos;             // servo angle 0-180
 int i;               // iterator
+int counter;
 
 int ledPin = 13;
  
@@ -30,7 +31,7 @@ void setup() {
   pinMode(ledPin, OUTPUT);
 
   Serial.begin(115200);
-  
+  counter = 0;
   resetServoPositions();
 } 
  
@@ -67,6 +68,13 @@ void loop() {
           servo4.write(pos);
           break;
       }
+    }
+  } else {
+    delay(10);
+    counter++;
+    if (counter >= 90) {
+      resetServoPositions();
+      counter = 0;
     }
   }
 }

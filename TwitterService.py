@@ -1,3 +1,4 @@
+
 # TwitterService.py
 # v3 : oAuth
 #
@@ -12,8 +13,8 @@ class TwitterService:
       f = open('settings.yaml')
       self.settings = yaml.load(f)
     except Exception, e:
-      print 'e: %s' % e
-      print repr(e)
+      error_print( '!!! e: %s' % e )
+      error_print( repr(e) )
       exit(1)
       
     try:
@@ -21,56 +22,56 @@ class TwitterService:
       self.auth.set_access_token(self.settings['access_key'], self.settings['access_secret'])
       self.api = tweepy.API(self.auth)
     except TweepError, e:
-      print 'e: %s' % e
-      print repr(e)
+      error_print( '!!! e: %s' % e )
+      error_print( repr(e) )
       exit(1)
     except Exception, e:
-      print 'e: %s' % e
-      print repr(e)
+      error_print( '!!! e: %s' % e )
+      error_print( repr(e) )
       exit(1)
     
     self.username = self.settings['username']
  
     self.last_reply_id = self.settings['last_reply_id']
     self.last_tweet_id = self.settings['last_tweet_id']
+    self.last_geo_id = self.settings['last_geo_id']    
     self.last_hashtag_id = self.settings['last_hashtag_id']
     self.status_ids_already_handled = []
     self.tweets = []
     self.following = []
     self.timeout = 6
     self.search_hashtags = self.settings['hashtags']
+    self.geoparams = self.settings['geosearch']
     self.interface = OpenSoundControl.Client(self.settings['user_interface']['osc_recv_port'])
     self.display = OpenSoundControl.Client(self.settings['tweet_display']['osc_recv_port'])
     
     
   def start(self):
     
-    '''
-    if replies:
-          for reply in replies:
-              print reply.text
-              self.interface.send("/@%s" % self.username, reply.text)
-    '''
-    
     debug_print("\nlistening...\n") 
+    
     while True:
+    
       #debug_print(".",; stdout.flush())
       
-      debug_print(chr(176) + 'looking for new people to follow') 
+      # GET NEW FOLLOWS
       self.update_following()
       
-      debug_print(chr(176) + 'looking for new tweets from followed users') 
-      r = self.get_new_tweets()
-      if r:
-        self.handle_new_followed_tweets(r)
+      # GET NEW TWEETS FROM FOLLOWED USERS
+
+      self.update_tweets()
       
-      debug_print(chr(176) + 'looking for tweets with hashtags ( %s )' % ", ".join(self.search_hashtags))
+      # GET NEW NEARBY TWEETS
+      r = self.geo_search()
+      if r:
+        self.handle_new_geo_tweets(r)
+      
+      # GET NEW HASHTAG TWEETS
       for hashtag in self.search_hashtags:
-        debug_print("searching for tweets with hashtag %s" % hashtag)
-        r = self.search(hashtag, self.last_hashtag_id)
+        r = self.hashtag_search(hashtag)
         if r:
           self.handle_new_hashtag_tweets(hashtag,r)
-      
+
       self.interface.send('/status','OK')
       
       self.settings_changed = False
@@ -80,6 +81,9 @@ class TwitterService:
         self.settings_changed = True
       if (self.settings['last_tweet_id'] < self.last_tweet_id):
         self.settings['last_tweet_id'] = self.last_tweet_id
+        self.settings_changed = True
+      if (self.settings['last_geo_id'] < self.last_geo_id):
+        self.settings['last_geo_id'] = self.last_geo_id
         self.settings_changed = True
       if (self.settings['last_hashtag_id'] < self.last_hashtag_id):
         self.settings['last_hashtag_id'] = self.last_hashtag_id
@@ -95,8 +99,8 @@ class TwitterService:
     try:
       status = self.api.PostUpdate(message)
     except TweepError, e:
-      print 'e: %s' % e
-      print repr(e)
+      error_print( '!!! e: %s' % e )
+      error_print( repr(e) )
       status = False
       
     if (status):
@@ -110,23 +114,36 @@ class TwitterService:
       replies = self.api.GetReplies(None, self.last_reply_id)
     except IOError, e:
     #  if hasattr(e, 'reason'):
-    #      print 'Can\'t reach server.', e.reason
+    #      print '!!! Can\'t reach server.', e.reason
     #  elif hasattr(e, 'code'):
-    #      print 'Server couldn\'t fulfil request:', e.code  
-      print 'Server couldn\'t fulfil request:', e.code
+    #      print '!!! Server couldn\'t fulfil request:', e.code  
+      error_print ('!!! Server couldn\'t fulfil request: %s' % e.code)
     return replies
-    
-  def search(self, terms, since_id_param):
+
+  def geo_search(self):
     try:
-      debug_print("searching for tweets with hashtag "+terms+" since id %d" % since_id_param)
-      results = self.api.search(terms, since_id=since_id_param)
+      info_print('~~~ looking for tweets within %(radius)s of %(lat)s, %(lng)s' % self.geoparams)
+      results = self.api.search(lang='en', geocode="%(lat)s,%(lng)s,%(radius)s" % self.geoparams)
       self.trace_search_results(results)
       return results
     except TweepError, e:
       if hasattr(e, 'reason'):
-          print 'Can\'t reach server.', e.reason
+        error_print( '!!! Can\'t reach server. %s' % e.reason )
       elif hasattr(e, 'code'):
-          print 'Server couldn\'t fulfil request:', e.code
+        error_print ('!!! Server couldn\'t fulfil request: %s' % e.code)
+      return False
+    
+  def hashtag_search(self, terms):
+    try:
+      info_print("### searching for tweets with hashtag "+terms+" since id %d" % self.last_hashtag_id)
+      results = self.api.search(terms, lang='en', since_id=self.last_hashtag_id)
+      self.trace_search_results(results)
+      return results
+    except TweepError, e:
+      if hasattr(e, 'reason'):
+        error_print( '!!! Can\'t reach server. %s' % e.reason )
+      elif hasattr(e, 'code'):
+        error_print ('!!! Server couldn\'t fulfil request: %s' % e.code)
       return False
 
   def trace_search_results(self, results):
@@ -144,9 +161,9 @@ class TwitterService:
         result = self.api.exists_friendship(self.username, user)
       except TweepError, e:
         if hasattr(e, 'reason'):
-            print 'Can\'t reach server.', e.reason
+          error_print( '!!! Can\'t reach server. %s' % e.reason )
         elif hasattr(e, 'code'):
-            print 'Server couldn\'t fulfil request:', e.code
+          error_print ('!!! Server couldn\'t fulfil request: %s' % e.code)
       else:
         # everything is fine
         if result: # update cache -- it's out of date
@@ -163,38 +180,43 @@ class TwitterService:
         success = self.api.create_friendship(user)
       except TweepError, e:
         if hasattr(e, 'reason'):
-            print 'Can\'t reach server.', e.reason
+          error_print( '!!! Can\'t reach server. %s' % e.reason )
         elif hasattr(e, 'code'):
-            print 'Server couldn\'t fulfil request:', e.code
+          error_print ('!!! Server couldn\'t fulfil request: %s' % e.code)
       else:
         if success:     
           self.following.append(user)
-          print chr(219) % 'following @' % user
+          info_print('+++ Now following @%s' % user)
     return success
 
   def get_new_tweets(self):
     try:
-      debug_print("looking for new tweets from users since %d" % self.last_tweet_id)
+      #debug_print("*** looking for new tweets from users since id %d" % self.last_tweet_id)
       return self.api.friends_timeline(since_id=self.last_tweet_id)
     except TweepError, e:
       if hasattr(e, 'reason'):
-          print 'Can\'t reach server.', e.reason
+        error_print( '!!! Can\'t reach server. %s' % e.reason )
       elif hasattr(e, 'code'):
-          print 'Server couldn\'t fulfil request:', e.code
+        error_print ('!!! Server couldn\'t fulfil request: %s' % e.code)
       else:
-        print 'e: %s' % e
+        print '!!! e: %s' % e
         print repr(e)
       return False
 
   def update_tweets(self):
+    info_print(">>> looking for new tweets from followed users since id %d" % self.last_tweet_id)    
     # save id's of tweets already seen, and don't show them again
     temp_tweet_id = 0
     tweets = self.get_new_tweets()
     newtweets = []
-    for t in tweets:
-      debug_print("inside update_tweets, checking t.id=" + t.id)
-      temp_tweet_id = max(temp_tweet_id, t.id)
-      newtweets.append([t.id,t.user.name,t.text])
+    if tweets:
+      self.handle_new_followed_tweets(tweets)
+      for t in tweets:
+        #debug_print("inside update_tweets, checking t.id=" + t.id)
+        temp_tweet_id = max(temp_tweet_id, t.id)
+        newtweets.append([t.id,t.user.name,t.text])
+      
+    #print "last_tweet_id: %d " % self.last_tweet_id + "temp_tweet_id: %d" % temp_tweet_id  
     self.last_tweet_id = max(self.last_tweet_id,temp_tweet_id)
     self.tweets = newtweets #.extend(self.tweets)
     
@@ -211,58 +233,70 @@ class TwitterService:
     return self.following;
     
   def update_following(self):
+    info_print('@@@ looking for new people to follow') 
     replies = False
     try:
-      replies = self.api.mentions()
+      replies = self.api.mentions(since_id=self.last_reply_id)
     except TweepError, e:
-      print 'e: %s' % e
-      print repr(e)
+      error_print( '!!! e: %s' % e )
+      error_print( repr(e) )
     except Exception, e:
-      print 'e: %s' % e
-      print repr(e)
+      print ( '!!! e: %s' % e )
+      print ( repr(e) )
  
     if (replies):
-      pattern = '@' + self.username + r"\sfollow\s@(\w{1,20})"
+      pattern = '@' + self.username + r"\sfollow\s@(\w{1,20})$"
       p = re.compile(pattern, re.IGNORECASE)
       new_users = []
       temp_reply_id = 0
       for r in replies:
+        
         #debug_print("Checking reply: " + r.text)
         temp_reply_id = max(temp_reply_id,r.id)
         m = p.match(r.text)
         if (m):
+          #debug_print("Found a follow command: " + r.text)
           u = m.group(1)
-          if not self.is_following(u):
-            new_users.append(u)
+          try:
+            # check it's actually a Twitter user
+            if self.api.get_user(u):
+              if not self.is_following(u):
+                #debug_print("About to follow: " + u)
+                new_users.append(u)
+              else:
+                debug_print("--- Already following @%s" % u)
+          except TweepError, e:
+            debug_print("!!! No user found: %s" % u)
+            
       if new_users:  
         debug_print("%d new users added to follow" % len(new_users))
         try:
           map(self.follow, new_users)
         except urllib2.HTTPError as e:
-          print "Error updating follow list"
-          print e
+          error_print("Error updating follow list")
+          error_print(e)
           return        
       self.last_reply_id = max(self.last_reply_id, temp_reply_id) 
       
   def handle_new_followed_tweets(self, statuses):
     count = 0
     for s in statuses:
-      debug_print("inside handle_new_followed_tweets, s.id = %d" % s.id)
+      #debug_print("inside handle_new_followed_tweets, s.id = %d" % s.id)
       id = s.id
       if id not in self.status_ids_already_handled:
         self.status_ids_already_handled.append(id)
         if (count == 0): 
-          debug_print("")
+          info_print("")
           
         user = s.user.screen_name.encode('ascii', 'ignore')
         text = s.text.encode('ascii', 'ignore')
         
-        debug_print(chr(219) + "@%s\n" % user + chr(32) + text + "\n\n")
+        info_print(">>> @%s\n    %s\n" % (user, text))
         self.interface.send('/tweet',[user, len(text), text])
         self.display.send('/tweet',[user, len(text), text])
         
         count = count + 1
-        time.sleep(1.5)
+        time.sleep(2.25)
         
   def handle_new_hashtag_tweets(self, hashtag, results):
     debug_print("handling hashtag tweets")
@@ -273,23 +307,47 @@ class TwitterService:
       if id not in self.status_ids_already_handled:
         self.status_ids_already_handled.append(id)
         if (count == 0): 
-          debug_print("")
+          info_print("")
           
         user = r.from_user.encode('ascii', 'ignore')
         text = r.text.encode('ascii', 'ignore')
         
-        debug_print(chr(177) + "@%s\n " % user + text + "\n\n")
-        self.interface.send('/#%s' % hashtag,[user, len(text), text])
-        self.display.send('/#%s' % hashtag,[user, len(text), text])
+        info_print("### @%s\n    %s\n" % (user, text))
+        self.interface.send('/tweet',[user, len(text), text])
+        self.display.send('/tweet',[user, len(text), text])
         
         temp_hashtag_id = max(temp_hashtag_id, id)
         self.last_hashtag_id = max(self.last_hashtag_id,temp_hashtag_id)
         
         count = count + 1
-        time.sleep(0.5)
-        
-          
-        
+        time.sleep(3)
+
+
+  def handle_new_geo_tweets(self, results):
+    debug_print("handling nearby tweets")
+    temp_geo_id = 0
+    count = 0
+    for r in results:
+      id = r.id
+      if id not in self.status_ids_already_handled:
+        self.status_ids_already_handled.append(id)
+        if (count == 0): 
+          info_print("")
+
+        user = r.from_user.encode('ascii', 'ignore')
+        text = r.text.encode('ascii', 'ignore')
+
+        info_print("~~~ @%s\n    %s\n" % (user, text))
+        self.interface.send('/tweet',[user, len(text), text])
+        self.display.send('/tweet',[user, len(text), text])
+
+        temp_geo_id = max(temp_geo_id, id)
+        self.last_geo_id = max(self.last_geo_id,temp_geo_id)
+
+        count = count + 1
+        time.sleep(1.5)
+
+                
   def save_settings(self):
     debug_print("Saving settings...")
     try:
@@ -297,14 +355,23 @@ class TwitterService:
       yaml.dump(self.settings, stream)
       return True
     except Exception, e:
-      print 'e: %s' % e
-      print repr(e)
+      error_print( '!!! e: %s' % e )
+      error_print( repr(e) )
       return False
 
+def error_print(msg):
+  if PRINT_ERROR:
+    print msg.encode('ascii', 'ignore')
+
 def debug_print(msg):
-  if DEBUG:
-    print msg
+  if PRINT_DEBUG:
+    print msg.encode('ascii', 'ignore')
+
+def info_print(msg):
+  if PRINT_INFO:
+    print msg.encode('ascii', 'ignore')
     
+
 if __name__ == "__main__":
 
     print ""
@@ -318,6 +385,9 @@ if __name__ == "__main__":
     print "  |  |/\| |___ |___  |   \__, \__/ | \|  |  |  \ \__/ |___ " 
     print ""
     
-    DEBUG = True
+    PRINT_ERROR = True
+    PRINT_DEBUG = False
+    PRINT_INFO = True
+    
     ts = TwitterService()
     ts.start()
