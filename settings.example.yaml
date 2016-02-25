@@ -1,0 +1,15 @@
+access_key: ACCESS_KEY
+access_secret: ACCESS_SECRET
+car_control: {osc_recv_addr: 127.0.0.1, osc_recv_port: 9001}
+consumer_key: CONSUMER_KEY
+consumer_secret: CONSUMER_SECRET
+geosearch: {lat: '52.674728', lng: '-8.648686', radius: 70mi}
+hashtags: ['#harddrivin', '#tweak']
+last_geo_id: 25120392888
+last_hashtag_id: 25108498417
+last_reply_id: 25111292319
+last_tweet_id: 25120329062
+serial_port: /dev/tty.usbserial-A9007MqG
+tweet_display: {osc_recv_addr: 127.0.0.1, osc_recv_port: 9002}
+user_interface: {osc_recv_addr: 127.0.0.1, osc_recv_port: 9000}
+username: harddrivin
