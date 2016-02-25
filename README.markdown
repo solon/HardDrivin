@@ -59,4 +59,4 @@ Open the `PureData\HardDrivin.pd` patch in Pure Data. This interface is useful f
 
 ## Tweet Display (Processing)
 
-This Processing sketch displays the tweets that control the cars.
+The Processing sketch in `Processing\HardDrivinDisplay\HardDrivinDisplay.pde` displays the tweets that control the cars.
