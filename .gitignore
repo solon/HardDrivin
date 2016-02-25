@@ -4,3 +4,4 @@ Processing/HardDrivinDisplay/application.*
 Processing/HardDrivinDisplay/applet
 Arduino/HardDrivin/applet
 settings.yaml
+.DS_Store
